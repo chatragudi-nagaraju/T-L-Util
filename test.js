@@ -28,7 +28,7 @@ const oldPolicies = oldStandardData();
             const isNotEmptyCode = !(phaseII.inclusiveCode.length == 1 && phaseII.inclusiveCode[0].length === 0);
             if(oldPolicy){
                 if(oldPolicy.inclusivePvrcs){
-                    //
+                    //concat 2 pvrcs and convert to set to remove the duplicates
                     let combinedCodes = [...oldPolicy.inclusivePvrcs, ...phaseII.inclusiveCode];
                     let unique = [...new Set(combinedCodes)];
                     oldPolicy.inclusivePvrcs = unique;
@@ -39,6 +39,7 @@ const oldPolicies = oldStandardData();
                     }
                 }
             }else{
+                // New policy, added in phase II 
                 var obj = isNotEmptyCode ? [{
                     policyNumber: phaseII.policy,
                     inclusivePvrcs: phaseII.inclusiveCode
@@ -49,9 +50,7 @@ const oldPolicies = oldStandardData();
             }
         })
         fs.writeFile('./temp.json',JSON.stringify([...oldPolicies, ...temp]), err => {});
-})
-
-    //console.log(dict);
-
+        
+});
 
 
