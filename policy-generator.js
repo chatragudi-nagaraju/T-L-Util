@@ -4,13 +4,19 @@ const {phaseINonStandardPolicies} = require("./submit-claim-nonstandard-travel-l
 const {phaseIStandardPolicies} = require("./submit-claim-standard-travel-lodging-policies")
 var fs = require("fs")
 
-var dict = [];
-var newPoliciesAddedInPhase2 = [];
+
 const phaseINonStdPolocies = phaseINonStandardPolicies();
 const phaseIStdPolocies = phaseIStandardPolicies();
 
+function getphaseIPolocies(formType ) {
+    if(formType === 'NonStandard') return phaseINonStdPolocies;
+    return phaseIStdPolocies;
+}
 
-['NonStandard'].forEach(formType => {
+['NonStandard', 'Standard'].forEach(formType => {
+    var dict = [];
+    var newPoliciesAddedInPhase2 = [];
+    var phaseIPolicies = getphaseIPolocies(formType);
     phase2RawData().filter(x=>x.FormType === formType).forEach(x=> 
         {
             var policy = dict.find(y => y.policy === x.policyNumber);
@@ -22,10 +28,26 @@ const phaseIStdPolocies = phaseIStandardPolicies();
                     inclusiveCode: [x.inclusivePvrcs.toString()]
                 })
             }
-        })
+        });
         
+
+        /*
+        Dict => 
+                 {
+                    policyNumber: '0185002',
+                },
+                    {
+                        policyNumber: '0902860',
+                        inclusivePvrcs: [
+                        '00010001',
+                        '00020002',
+                        '00130013',
+                        '00140014',
+                        }
+        */
         dict.forEach(phaseII => {
-            const oldPolicy = phaseINonStdPolocies.find(phaseI => phaseII.policy === phaseI.policyNumber);
+
+            const oldPolicy = phaseIPolicies.find(phaseI => phaseII.policy === phaseI.policyNumber);
             const isNotEmptyCode = !(phaseII.inclusiveCode.length == 1 && phaseII.inclusiveCode[0].length === 0);
             if(oldPolicy){
                 if(oldPolicy.inclusivePvrcs){
@@ -40,18 +62,19 @@ const phaseIStdPolocies = phaseIStandardPolicies();
                     }
                 }
             }else{
+
                 // New policy, added in phase II 
-                var obj = isNotEmptyCode ? [{
+                var obj = isNotEmptyCode ? {
                     policyNumber: phaseII.policy,
                     inclusivePvrcs: phaseII.inclusiveCode
-                }] : [{
+                } : {
                     policyNumber: phaseII.policy
-                }];
+                };
                 newPoliciesAddedInPhase2.push(obj);
             }
         })
-        fs.writeFile('./NonStandard.json',JSON.stringify([...phaseINonStdPolocies, ...newPoliciesAddedInPhase2]), err => {});
-        
+        console.log('new policies',newPoliciesAddedInPhase2)
+        fs.writeFile('./'+formType+'.json',JSON.stringify([...phaseIPolicies, ...newPoliciesAddedInPhase2]), err => {});
 });
 
 

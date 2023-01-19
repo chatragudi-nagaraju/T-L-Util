@@ -1,12 +1,18 @@
 var fs = require("fs");
-const {data} = require("./rawData");
+const {phase2RawData} = require("./rawData");
 
-// verify all the policies with inclusive codes included in the new list
-var fileContent = fs.readFileSync('./temp.json', {encoding:'utf8', flag:'r'});
+function getFileContent(formType) {
+    if(formType === 'Standard') {
+       return fs.readFileSync('./Standard.json', {encoding:'utf8', flag:'r'});
+    } 
+    return fs.readFileSync('./NonStandard.json', {encoding:'utf8', flag:'r'});
+}
 
-['NonStandard'].forEach(formType => {
-    data().filter(tlData=>tlData.FormType === formType).forEach(data => {
+['Standard', 'NonStandard'].forEach(formType => {
+    var fileContent = getFileContent(formType);
+    phase2RawData().filter(tlData=>tlData.FormType === formType).forEach(data => {
         var hasPolicy = fileContent.indexOf(data.policyNumber)>=0;
+
         if(!hasPolicy){
             console.log('Policy:', data.policyNumber, 'not included')
             return;
